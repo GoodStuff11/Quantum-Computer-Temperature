@@ -1,0 +1,3 @@
+[submodule "code/qc-temp/RydbergGPT"]
+	path = code/qc-temp/RydbergGPT
+	url = https://github.com/PIQuIL/RydbergGPT.git
