@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --mem=4G
+#SBATCH --mem=12G
 #SBATCH --account=def-rgmelko
 #SBATCH --nodes=1
 #SBATCH --time=24:00:00

@@ -45,15 +45,15 @@ function main(ARGS)
     M = 50;
     EQ_MCS = 2_000; # number of iterations to equilibrate
     MCS = 10_000_000; # number of samples
-    seed = 3214;
+    seed = 3215;
 
     @show M, EQ_MCS, MCS, seed
-
+     
     Ω_list = [2π * 2.5]
     Δ_per_Ω_list = [1.1]
     Rb_per_a_list = [1.2]
     nx_list = [4]
-    β_list = 1/LinRange(11,1000,30)
+    β_list = LinRange(0.001,0.1,30)
     # β_list = [1]
 
     for (i, (nx, Ω, Δ_per_Ω, Rb_per_a, β)) in enumerate(Iterators.product(nx_list, Ω_list, Δ_per_Ω_list,Rb_per_a_list, β_list))
