@@ -48,15 +48,15 @@ function main(ARGS)
     seed = 3215;
 
     @show M, EQ_MCS, MCS, seed
-     
-    Ω_list = [2π * 2.5]
+    
+    Ω_list = [1,2,3,4]
     Δ_per_Ω_list = [1.1]
     Rb_per_a_list = [1.2]
     nx_list = [4]
-    β_list = LinRange(0.001,0.1,30)
-    # β_list = [1]
+    # β_list = [10 .^ LinRange(-2,3,20)]
+    βΩ_list = [3]
 
-    for (i, (nx, Ω, Δ_per_Ω, Rb_per_a, β)) in enumerate(Iterators.product(nx_list, Ω_list, Δ_per_Ω_list,Rb_per_a_list, β_list))
+    for (i, (nx, Ω, Δ_per_Ω, Rb_per_a, βΩ)) in enumerate(Iterators.product(nx_list, Ω_list, Δ_per_Ω_list,Rb_per_a_list, βΩ_list))
         if i % total_split != split_number
             continue
         end
@@ -74,21 +74,23 @@ function main(ARGS)
         @show Rb_per_a
         @show Δ_per_Ω
         @show Ω
-        @show β
+        @show βΩ
         data_dict["Rb_per_a"] = Rb_per_a
         data_dict["Δ_per_Ω"] = Δ_per_Ω
         data_dict["Ω"] = Ω
-        data_dict["β"] = β
+        data_dict["βΩ"] = βΩ
 
         C = 2π * 862690;
         Rb = (C/Ω)^(1/6);
         a = Rb/Rb_per_a;
         Δ = Ω*Δ_per_Ω;
+        β = βΩ/Ω;
 
         data_dict["C"] = C
         data_dict["Rb"] = Rb
         data_dict["a"] = a
         data_dict["Δ"] = Δ
+        data_dict["β"] = β
 
         @show C
         @show Rb
@@ -99,10 +101,10 @@ function main(ARGS)
         data_dict["nx"] = nx
         data_dict["ny"] = ny
 
-        # data_dict["lattice"] = "CornerSquareLattice"
-        # atoms = AtomList(generate_corner_grids(nx, a))
-        data_dict["lattice"] = "SquareLattice"
-        atoms = generate_sites(SquareLattice(), nx, ny, scale = a)
+        data_dict["lattice"] = "CornerSquareLattice"
+        atoms = AtomList(generate_corner_grids(nx, a))
+        # data_dict["lattice"] = "SquareLattice"
+        # atoms = generate_sites(SquareLattice(), nx, ny, scale = a)
 
         @show nx, ny
         
@@ -111,7 +113,7 @@ function main(ARGS)
             order_parameter = compute_order_parameter(occs)
             data_dict["energy"] = energy.val
             data_dict["energy_error"] = energy.err
-            save_data(occs,ns, order_parameter, data_dict;gridname="CornerSquareLattice") 
+            save_data(occs,ns, order_parameter, data_dict; gridname="CornerSquareLattice") 
         end
         @show t
     end

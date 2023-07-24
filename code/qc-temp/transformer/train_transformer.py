@@ -1,5 +1,7 @@
+
+
 if __name__ == "__main__":
-    from transformer_model import EncoderOnlyTransformerModel
+    from transformer_model import EncoderOnlyTransformerModel, EncoderDecoderTransformerModel
     from dataloader import QCTempDataset, DataLoader
     import numpy as np
     import torch
@@ -19,7 +21,7 @@ if __name__ == "__main__":
             "/home/jkambulo/projects/def-rgmelko/jkambulo/code/qc-temp/transformer/checkpoints/model_moreparams.pt"
         )
     else:
-        transformer = EncoderOnlyTransformerModel(
+        transformer = EncoderDecoderTransformerModel(
             atom_grid_shape=(4, 4),
             spin_states=2,
             embedding_size=4,

@@ -92,13 +92,14 @@ Folder structure
 function save_data(occs, ns, order_parameter, data_dict; gridname=nothing)
     nx = data_dict["nx"]
     ny = data_dict["ny"]
+    Ω = data_dict["Ω"]
     Rb = data_dict["Rb_per_a"]
     Δ = data_dict["Δ_per_Ω"]
-    β = data_dict["β"]
+    β = data_dict["βΩ"]
     if isnothing(gridname)
-        folder = @sprintf("../../data/qc-temp/%dx%d,Rb=%.2f,Δ=%.2f,β=%.3f_data", nx, ny, Rb, Δ, β)
+        folder = @sprintf("../../data/qc-temp/%dx%d,Rb=%.2f,Δ=%.2f,β=%.6f_data", nx, ny, Rb, Δ, β)
     else
-        folder = @sprintf("../../data/qc-temp/%dx%d,Rb=%.2f,Δ=%.2f,β=%.3f_%sdata", nx, ny, Rb, Δ, β, gridname)
+        folder = @sprintf("../../data/qc-temp/%dx%d,Rb=%.2f,Δ=%.2f,β=%.6f,Ω=%.2f_%sdata", nx, ny, Rb, Δ, β, Ω, gridname)
     end
     save("$folder/data.jld", "occs", occs, "ns", ns, "order_param", order_parameter)
     open("$folder/meta_data.json","w") do f

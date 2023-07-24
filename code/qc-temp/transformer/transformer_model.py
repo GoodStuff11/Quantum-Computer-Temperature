@@ -9,7 +9,7 @@ import numpy as np
 import torch
 from torch import nn, Tensor
 import torch.nn.functional as F
-from torch.nn import TransformerEncoder, TransformerEncoderLayer
+from torch.nn import TransformerEncoder, TransformerEncoderLayer, TransformerDecoder, TransformerDecoderLayer
 from torch.utils.data import dataset
 
 
@@ -92,7 +92,7 @@ class EncoderOnlyTransformerModel(nn.Module):
         init = torch.zeros(
             (self.n_phys_params + self.natoms, batch_size, self.n_phys_params + self.spin_states)
         )
-        init[: self.n_phys_params, :, : self.n_phys_params] = phys_params.diag_embed(dim1=0, dim2=2)
+        init[: self.n_phys_params, :, : self.n_phys_params] = torch.log(phys_params).diag_embed(dim1=0, dim2=2)
         init[self.n_phys_params :, :, self.n_phys_params :] += F.one_hot(spins, num_classes=self.spin_states)
 
         return init
@@ -182,6 +182,108 @@ class EncoderOnlyTransformerModel(nn.Module):
         output *= torch.nn.functional.one_hot(x, num_classes=self.spin_states)
         return torch.sum(output, axis=(0, 2))
 
+
+class EncoderDecoderTransformerModel(nn.Module):
+    def __init__(
+        self,
+        atom_grid_shape: tuple,
+        spin_states: int,
+        nhead: int,
+        nlayers: int = 6,
+        embedding_size: int = 3,
+        dim_feedforward: int = 2048,
+        dropout: float = 0.5,
+        n_phys_params: int = 1,
+    ):
+        """Encoder-only transformer
+
+        Args:
+            atom_grid_shape (tuple): Allows only for grids of atoms. For 1d grid, put (x_length,) and
+                2d grids are (x_length, y_length)
+            spin_states (int): Number of states in system, such as 2 for a up, down spin state
+            embedding_size (int): Dimension of embedding. (Encodes with one-hot)
+            nhead (int): Number of heads
+            dim_feedforward (int): the dimension of the feedforward network model
+            nlayers (int): Number of encoder layers
+            dropout (float, optional): Dropout fraction. Defaults to 0.5.
+            n_phys_params (int, optional): Number of physical parameters to append to start of input. Defaults to 1.
+        """
+        super().__init__()
+        self.start_iteration = 0
+
+        self.model_type = 'Transformer'
+        self.spin_states = spin_states
+        self.embedding_size = embedding_size
+        self.natoms = np.prod(atom_grid_shape)
+        self.n_phys_params = n_phys_params  # num parameters to put at start of input: [beta]
+        self.hyperparameters = {
+            "atom_grid_shape": atom_grid_shape,
+            "spin_states": spin_states,
+            "nhead": nhead,
+            "nlayers": nlayers,
+            "embedding_size": embedding_size,
+            "dim_feedforward": dim_feedforward,
+            "dropout": dropout,
+            "n_phys_params": n_phys_params,
+        }
+
+        self.pos_encoder = PositionalEncoding(2, dropout)
+        decoder_layer = TransformerDecoderLayer(spin_states, nhead, dim_feedforward, dropout=0)
+        self.decoder = TransformerDecoder(decoder_layer, nlayers)
+        self.encoder = nn.Linear(1, nhead*self.natoms)
+        
+        self.optim = TransformerOptimizer(self)
+        
+    def forward(self, x, beta):
+        x = torch.cat((torch.zeros((1, x.shape[1])), x), 0).type(torch.int64)
+        tgt_mask = generate_square_subsequent_mask(len(x), diag=1)
+        x = F.one_hot(x, num_classes=self.spin_states)
+        output = self.pos_encoder(x)
+        
+        output = self.decoder(output, F.gelu(self.encoder(beta.T).T).reshape(self.natoms,-1,2), tgt_mask=tgt_mask)
+        output = F.log_softmax(output, dim=-1)
+        return output
+    
+    def start_training(
+        self,
+        dataloader,
+        checkpoint_path: str = './checkpoints/model.pt',
+        data_file: str = './checkpoints/data1.csv',
+        log_interval: int = 100,
+    ):
+        """_summary_
+
+        Args:
+            dataloader (_type_): Should be an iterator that outputs (data, beta) pairs where
+                data has size [natoms, batchsize] and beta has size [n_phys_params, batchsize]
+            checkpoint_path (str, optional): _description_. Defaults to './checkpoints/model.pt'.
+        """
+        total_loss = 0.0
+
+        self.train()
+        start_time = time.time()
+        for i, (spins, parameters) in enumerate(dataloader):
+            log_p = self(spins[:-1], parameters).view(-1, 2)
+            target = spins.view(-1)
+            loss = self.optim.step(log_p, target)
+
+            total_loss += loss
+            if i % log_interval == 0 and i > 0:
+                lr = self.optim.scheduler.get_last_lr()[0]
+                ms_per_batch = (time.time() - start_time) * 1000 / log_interval
+                cur_loss = total_loss / log_interval
+                with open(data_file, 'a+') as f:
+                    display_output = (
+                        f'epoch {dataloader.current_epoch:3d} | {i%dataloader.nbatches:5d}/{dataloader.nbatches:d} batches | '
+                        f'lr {lr:02.6f} | ms/batch {ms_per_batch:5.2f} | '
+                        f'loss {cur_loss:5.4f} | memory {psutil.Process(os.getpid()).memory_percent()}'
+                    )
+                    f.write(display_output + '\n')
+                print(display_output)
+                total_loss = 0
+
+                start_time = time.time()
+    
 
 def generate_square_subsequent_mask(sz: int, diag: int = 1) -> Tensor:
     """Generates an upper-triangular matrix of ``-inf``, with zeros on ``diag``."""
@@ -334,15 +436,18 @@ def compute_all_probabilities(transformer, phys_params, batchsize=1000, atoms=16
         atoms (int, optional): _description_. Defaults to 16.
     """
     ncomb = 2**atoms
-    total_configs = int_to_binary(torch.arange(ncomb))  #
-    prob = torch.zeros(atoms)
+    total_configs = int_to_binary(torch.arange(ncomb), atoms)  #
+    prob = torch.zeros(2**atoms)
 
     i = 0
-    while i * batchsize < atoms:
+    while i * batchsize < 2**atoms:
+        # print(batchsize*i)
         input = total_configs[i * batchsize : (i + 1) * batchsize]
+        
         prob[i * batchsize : (i + 1) * batchsize] = transformer.calculate_log_probability(
             input.T, phys_params[None].repeat_interleave(len(input), dim=0).T
         )
+        i += 1
     return total_configs, prob
 
 
@@ -366,7 +471,7 @@ def compute_energy(total_configs: torch.Tensor, logp: torch.Tensor, params: dict
     rb = (C / omega) ** (1 / 6)
     a = rb / params['rb_per_a']
     delta = params['delta_per_omega'] * omega
-    print(f'c={C} omega={omega} rb={rb} a={a} delta={delta}')
+    # print(f'c={C} omega={omega} rb={rb} a={a} delta={delta}')
 
     def compute_interaction(x: torch.Tensor):
         """Computes sum_ij Vij*ni*nj

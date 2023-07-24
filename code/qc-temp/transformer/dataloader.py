@@ -7,7 +7,7 @@ import os
 import numpy as np
 from typing import Optional
 from itertools import product
-
+import time
 
 class QCTempDataset(Dataset):
     def __init__(
@@ -17,10 +17,12 @@ class QCTempDataset(Dataset):
         Rb_per_a: Optional[float] = None,
         delta_per_omega: Optional[float] = None,
         query_beta=None,
+        query_omega=None,
         lattice: Optional[str] = None,
     ):
         self.datasets = []
         self.beta = []
+        self.omega = []
         self.energy = []
         self.energy_error = []
         self.ns = []
@@ -35,10 +37,14 @@ class QCTempDataset(Dataset):
                     or (Rb_per_a and not np.isclose(Rb_per_a, float(_dict["Rb_per_a"])))
                     or (delta_per_omega and not np.isclose(delta_per_omega, float(_dict["Δ_per_Ω"])))
                     or (query_beta and not query_beta(_dict["β"]))
+                    or (query_omega and not query_omega(_dict["Ω"]))
                     or (lattice and lattice != _dict['lattice'])
                 ):
+                   
                     continue
+
                 self.beta.append(_dict["β"])
+                self.omega.append(_dict["Ω"])
                 self.energy.append(_dict["energy"])
                 self.energy_error.append(_dict["energy_error"])
             file = h5py.File(data_path, "r")
@@ -116,6 +122,7 @@ class DataLoader:
             for i in range(self.nbatches * len(self.dataset_order)):
                 self.current_batch = i % self.nbatches
                 dataset_index = (i // 400) % len(self.dataset_order)
+                
                 data = torch.tensor(
                     self.dataset.datasets[dataset_index][:, self.shuffle_order[i, :]],
                     dtype=torch.int64,

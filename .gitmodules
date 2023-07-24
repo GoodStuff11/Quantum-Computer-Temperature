@@ -1,3 +1,6 @@
 [submodule "code/qc-temp/RydbergGPT"]
 	path = code/qc-temp/RydbergGPT
 	url = https://github.com/PIQuIL/RydbergGPT.git
+[submodule "code/qc-temp/VMC_with_LPTFs"]
+	path = code/qc-temp/VMC_with_LPTFs
+	url = https://github.com/APRIQuOt/VMC_with_LPTFs.git
