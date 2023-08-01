@@ -4,3 +4,6 @@
 [submodule "code/qc-temp/VMC_with_LPTFs"]
 	path = code/qc-temp/VMC_with_LPTFs
 	url = https://github.com/APRIQuOt/VMC_with_LPTFs.git
+[submodule "code/code/sweeping-energy/torchscale"]
+	path = code/code/sweeping-energy/torchscale
+	url = https://github.com/microsoft/torchscale.git

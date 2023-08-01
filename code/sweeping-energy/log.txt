@@ -1,0 +1,60 @@
+hey
+KZ_data_12x12_84_MHz_per_us.npz
+sweep rate 84.85281374238569
+got to vmc
+KZ_data_12x12_30_MHz_per_us.npz
+sweep rate 30.0
+got to vmc
+KZ_data_12x12_15_MHz_per_us.npz
+sweep rate 15.0
+got to vmc
+KZ_data_12x12_21_MHz_per_us.npz
+sweep rate 21.213203435596423
+got to vmc
+KZ_data_12x12_120_MHz_per_us.npz
+sweep rate 120.0
+got to vmc
+KZ_data_12x12_60_MHz_per_us.npz
+sweep rate 60.0
+got to vmc
+KZ_data_12x12_42_MHz_per_us.npz
+sweep rate 42.426406871192846
+got to vmc
+hey
+KZ_data_12x12_84_MHz_per_us.npz
+sweep rate 84.85281374238569
+got to vmc
+got past vmc
+KZ_data_12x12_30_MHz_per_us.npz
+sweep rate 30.0
+got to vmc
+got past vmc
+KZ_data_12x12_15_MHz_per_us.npz
+sweep rate 15.0
+got to vmc
+got past vmc
+KZ_data_12x12_21_MHz_per_us.npz
+sweep rate 21.213203435596423
+got to vmc
+got past vmc
+KZ_data_12x12_120_MHz_per_us.npz
+sweep rate 120.0
+got to vmc
+got past vmc
+KZ_data_12x12_60_MHz_per_us.npz
+sweep rate 60.0
+got to vmc
+got past vmc
+KZ_data_12x12_42_MHz_per_us.npz
+sweep rate 42.426406871192846
+got to vmc
+got past vmc
+
+KZ_data_12x12_84_MHz_per_us.npz
+sweep rate 84.85281374238569
+
+KZ_data_12x12_84_MHz_per_us.npz
+sweep rate 84.85281374238569
+
+KZ_data_12x12_84_MHz_per_us.npz
+sweep rate 84.85281374238569
