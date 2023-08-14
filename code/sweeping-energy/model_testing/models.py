@@ -38,16 +38,26 @@ class Model(nn.Module):
 
 
 class RNN_1D(Model):
-    def __init__(self, hidden_size=10):
+    def __init__(self, Lx, Ly, hidden_size=10, model_type='lstm'):
         super().__init__()
+        self.Lx, self.Ly = Lx, Ly
         self.hidden_size = hidden_size
-        self.rnn = nn.RNN(input_size=2, hidden_size=hidden_size, batch_first=True)
+        if model_type == "lstm":
+            model = nn.LSTM
+        elif model_type == 'gru':
+            model = nn.GRU
+        elif model_type == 'rnn':
+            model = nn.RNN
+            
+        self.rnn = model(input_size=2, hidden_size=hidden_size, batch_first=True)
         self.linear = nn.Linear(hidden_size, 2)
         self.log_softmax = nn.LogSoftmax(dim=-1)
         self.to(self.device)
 
     @torch.jit.export
     def forward(self, x):
+        x = torch.cat((torch.zeros((x.shape[0], 1), device=self.device), x[:, :-1]), dim=1).type(torch.int64)
+        x = F.one_hot(x, num_classes=2).type(torch.float32)
         output, _ = self.rnn(x)
         output = self.linear(output)
         output = self.log_softmax(output)
@@ -61,7 +71,8 @@ class RNN_1D(Model):
         )  # the first guess is when inputting zero
         for i in range(self.N):
             i = max(i, 1)
-            output, h = self.rnn.forward(samples[:, i - 1 : i], h)
+            input = F.one_hot(samples[:, i - 1 : i], num_classes=2).type(torch.float32)
+            output, h = self.rnn.forward(input, h)
             output = self.linear(output)
             output = F.softmax(output, dim=-1)
             samples[:, i - 1] = torch.multinomial(output.reshape(nsamples, 2), 1).reshape(nsamples)

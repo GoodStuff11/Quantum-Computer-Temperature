@@ -41,7 +41,7 @@ class Hamiltonian:
             """
             x = x.T
             c = torch.arange(self.atoms, device=self.device)
-            rows = round(self.Ly)
+            rows = self.Ly
             d_inv_6 = torch.triu(
                 (
                     1
@@ -61,18 +61,31 @@ class Hamiltonian:
             filter = (x[i] == 1) & (x[j] == 1)
             return torch.sum(d_inv_6[i[:, None] * filter, j[:, None] * filter], axis=0)
 
-        def compute_rabi(samples, batchsize=30):
+        def compute_rabi(samples, batchsize:int=30):
+            """_summary_
+
+            Args:
+                samples (tensor): (batchsize, atoms)
+                batchsize (int, optional): _description_. Defaults to 30.
+
+            Returns:
+                _type_: _description_
+            """
             x = torch.eye(self.atoms, dtype=torch.int32, device=self.device)  # (atoms, atoms)
-            flipped_samples = (x ^ samples.unsqueeze(-1)).reshape(
+            flipped_samples = (x ^ samples.unsqueeze(-2)).reshape(
                 len(samples) * self.atoms, self.atoms
             )  # (nsamples*atoms, atoms)
-            
+            # print(samples)
+            # print(flipped_samples)
+            # print(flipped_samples[:,0])
             # iterating to not compute so much ram
             flipped_logp = torch.zeros(flipped_samples.shape[0], device=self.device)
-            for k in range(flipped_samples.shape[0]//batchsize):
+            for k in range(int(np.ceil(flipped_samples.shape[0]/batchsize))):
                 flipped_logp[k*batchsize:(k+1)*batchsize] = compute_logp(flipped_samples[k*batchsize:(k+1)*batchsize])
-            sample_logp = compute_logp(samples)
-
+            sample_logp = compute_logp(samples) # (nsamples,)
+            # print(sample_logp)
+            # print(flipped_logp)
+            # raise Exception()
             return torch.sum(
                 torch.exp(
                     0.5

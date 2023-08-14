@@ -49,12 +49,11 @@ function main(ARGS)
 
     @show M, EQ_MCS, MCS, seed
     
-    Ω_list = [1,2,3,4]
-    Δ_per_Ω_list = [1.1]
-    Rb_per_a_list = [1.2]
+    Ω_list = [1]
+    Δ_per_Ω_list = [1.60,1.63,1.66]
+    Rb_per_a_list = [1.16,1.18,1.20]
     nx_list = [4]
-    # β_list = [10 .^ LinRange(-2,3,20)]
-    βΩ_list = [3]
+    βΩ_list = [2.81, 2.91, 3]
 
     for (i, (nx, Ω, Δ_per_Ω, Rb_per_a, βΩ)) in enumerate(Iterators.product(nx_list, Ω_list, Δ_per_Ω_list,Rb_per_a_list, βΩ_list))
         if i % total_split != split_number
@@ -101,10 +100,10 @@ function main(ARGS)
         data_dict["nx"] = nx
         data_dict["ny"] = ny
 
-        data_dict["lattice"] = "CornerSquareLattice"
-        atoms = AtomList(generate_corner_grids(nx, a))
-        # data_dict["lattice"] = "SquareLattice"
-        # atoms = generate_sites(SquareLattice(), nx, ny, scale = a)
+        # data_dict["lattice"] = "CornerSquareLattice"
+        # atoms = AtomList(generate_corner_grids(nx, a))
+        data_dict["lattice"] = "SquareLattice"
+        atoms = generate_sites(SquareLattice(), nx, ny, scale = a)
 
         @show nx, ny
         
@@ -113,7 +112,7 @@ function main(ARGS)
             order_parameter = compute_order_parameter(occs)
             data_dict["energy"] = energy.val
             data_dict["energy_error"] = energy.err
-            save_data(occs,ns, order_parameter, data_dict; gridname="CornerSquareLattice") 
+            save_data(occs,ns, order_parameter, data_dict; gridname="SquareLattice") 
         end
         @show t
     end

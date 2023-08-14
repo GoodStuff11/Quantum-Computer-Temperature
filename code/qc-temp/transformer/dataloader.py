@@ -18,11 +18,15 @@ class QCTempDataset(Dataset):
         delta_per_omega: Optional[float] = None,
         query_beta=None,
         query_omega=None,
+        query_delta_per_omega=None,
+        query_rb_per_a=None,
         lattice: Optional[str] = None,
     ):
         self.datasets = []
         self.beta = []
         self.omega = []
+        self.delta_per_omega = []
+        self.rb_per_a = []
         self.energy = []
         self.energy_error = []
         self.ns = []
@@ -38,6 +42,8 @@ class QCTempDataset(Dataset):
                     or (delta_per_omega and not np.isclose(delta_per_omega, float(_dict["Δ_per_Ω"])))
                     or (query_beta and not query_beta(_dict["β"]))
                     or (query_omega and not query_omega(_dict["Ω"]))
+                    or (query_delta_per_omega and not query_delta_per_omega(_dict["Δ_per_Ω"]))
+                    or (query_rb_per_a and not query_rb_per_a(_dict["Rb_per_a"]))
                     or (lattice and lattice != _dict['lattice'])
                 ):
                    
@@ -45,6 +51,8 @@ class QCTempDataset(Dataset):
 
                 self.beta.append(_dict["β"])
                 self.omega.append(_dict["Ω"])
+                self.delta_per_omega.append(_dict["Δ_per_Ω"])
+                self.rb_per_a.append(_dict["Rb_per_a"])
                 self.energy.append(_dict["energy"])
                 self.energy_error.append(_dict["energy_error"])
             file = h5py.File(data_path, "r")

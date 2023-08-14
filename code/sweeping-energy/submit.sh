@@ -10,8 +10,8 @@
 module purge
 # module load cuda cudnn  
 
-source /home/jkambulo/projects/def-rgmelko/jkambulo/py10/bin/activate
-# module load python/3.10
+# source /home/jkambulo/projects/def-rgmelko/jkambulo/py10/bin/activate
+module load python/3.10
 
 # export NCCL_BLOCKING_WAIT=1
 
