@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --mem=100G
+#SBATCH --mem=40G
 #SBATCH --account=def-rgmelko
 #SBATCH --time=1-00:00:00
 #SBATCH --mail-user=jkambulo@uwaterloo.ca

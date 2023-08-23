@@ -16,13 +16,15 @@ def compute_histograms(data):
     bins = np.arange(ncomb)
     hist = np.histogram(f(data), bins=bins, density=True)[0]  
     yield hist
-    nsamples = int(1e7)
+    less_nsamples = int(4e5)
+    more_nsamples = int(1e7)
 
     for i in range(10):
-        print('-', i)
-        sample = np.random.choice(bins[:-1], size=(nsamples,), p=hist)
-        resampled_hist, _ = np.histogram(sample, bins=bins, density=True)
-        yield resampled_hist
+        sample = np.random.choice(bins[:-1], size=(less_nsamples,), p=hist)
+        resampled_hist_inaccurate, _ = np.histogram(sample, bins=bins, density=True)
+        sample = np.random.choice(bins[:-1], size=(more_nsamples,), p=hist)
+        resampled_hist_accurate, _ = np.histogram(sample, bins=bins, density=True)
+        yield resampled_hist_inaccurate, resampled_hist_accurate
         
 
 # def compute_histograms_dataset(dataset: QCTempDataset, atoms=None):
@@ -44,11 +46,11 @@ def compute_all_JSD(real_hist, dataset):
         gen = compute_histograms(data[:].T)
         qmc_hist = next(gen)
         jsd1.append(jensenshannon(real_hist, qmc_hist))
-        for j, resampled_hist in enumerate(gen):
+        for j, (resampled_hist_inaccurate, resampled_hist_accurate) in enumerate(gen):
             print(i, j)
-            jsd1.append(jensenshannon(real_hist, resampled_hist))
-            jsd2.append(jensenshannon(qmc_hist, resampled_hist))
-            del resampled_hist
+            jsd1.append(jensenshannon(real_hist, resampled_hist_accurate))
+            jsd2.append(jensenshannon(qmc_hist, resampled_hist_inaccurate))
+
         df.loc[i, "real-QMC_JSD"] = np.mean(jsd1)
         df.loc[i, "real-QMC_JSD_std"] = np.std(jsd1)
         df.loc[i, "QMC-QMC_JSD"] = np.mean(jsd2)
@@ -60,13 +62,13 @@ def compute_all_JSD(real_hist, dataset):
     df['beta*omega'] = df['beta']*df['omega']
     df['rb_per_a'] = rb_per_a_list
     
-    df.to_csv("complete_phase_JSD.csv")
+    df.to_csv("full_JSD_delta.csv")
 
 if __name__ == "__main__":
     # dataset = QCTempDataset("/home/jkambulo/projects/def-rgmelko/jkambulo/data/qc-temp", 
     # size=(4,4), Rb_per_a=1.15, delta_per_omega=1.2)
     dataset = QCTempDataset("/home/jkambulo/projects/def-rgmelko/jkambulo/data/qc-temp", 
-                            size=(4,4),
+                            size=(4,4), lattice='SquareLattice',
                             # query_beta=lambda x: (x > 2) & (x < 4), 
                             # query_delta_per_omega=lambda x: (x > 1.3) & (x < 1.9)
                             )
