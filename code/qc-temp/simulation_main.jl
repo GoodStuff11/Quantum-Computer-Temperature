@@ -50,10 +50,10 @@ function main(ARGS)
     @show M, EQ_MCS, MCS, seed
     
     Ω_list = [1]
-    Δ_per_Ω_list = [1.60,1.63,1.66]
-    Rb_per_a_list = [1.16,1.18,1.20]
+    Δ_per_Ω_list = LinRange(0.7,1.5,12)
+    Rb_per_a_list = [1.15]
     nx_list = [4]
-    βΩ_list = [2.81, 2.91, 3]
+    βΩ_list = LinRange(2, 3, 10)
 
     for (i, (nx, Ω, Δ_per_Ω, Rb_per_a, βΩ)) in enumerate(Iterators.product(nx_list, Ω_list, Δ_per_Ω_list,Rb_per_a_list, βΩ_list))
         if i % total_split != split_number
