@@ -50,8 +50,8 @@ function main(ARGS)
     @show M, EQ_MCS, MCS, seed
     
     Ω_list = [1]
-    Δ_per_Ω_list = LinRange(0.7,1.5,12)
-    Rb_per_a_list = [1.15]
+    Δ_per_Ω_list = LinRange(1.5,2.7,12)
+    Rb_per_a_list = [1.3]
     nx_list = [4]
     βΩ_list = LinRange(2, 3, 10)
 
